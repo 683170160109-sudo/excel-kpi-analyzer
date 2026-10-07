@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enterprise AI Data Copilot & Intelligent KPI Engine</title>
+  <!-- Google Fonts: Prompt & Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- SheetJS for Excel/CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- html2canvas for downloading chart dashboard as image -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --bg-app: #f8fafc;
+      --card-bg: #ffffff;
+      --text-title: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-soft: #eef2ff;
+      --primary-border: #c7d2fe;
+
+      --accent-green: #10b981;
+      --accent-green-bg: #ecfdf5;
+      --accent-amber: #f59e0b;
+      --accent-amber-bg: #fffbeb;
+      --accent-rose: #f43f5e;
+      --accent-rose-bg: #fff1f2;
+
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.12);
+      
+      --radius-xl: 1.25rem;
+      --radius-lg: 0.875rem;
+      --radius-md: 0.625rem;
+      --radius-sm: 0.375rem;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', 'Inter', sans-serif; }
+    body { background-color: var(--bg-app); color: var(--text-body); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* LANDING HERO */
+    .hero-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top left, #eef2ff 0%, #f8fafc 60%, #f1f5f9 100%);
+      padding: 2rem 1rem;
+    }
+    .hero-card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 3.5rem 2.5rem;
+      max-width: 650px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .hero-tag {
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 2rem;
+      margin-bottom: 1.25rem;
+    }
+    .hero-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-title);
+      margin-bottom: 0.85rem;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+    }
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      margin-bottom: 2.25rem;
+      line-height: 1.6;
+    }
+    .upload-dropzone {
+      border: 2px dashed var(--primary);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 1.5rem;
+      background: #fafafa;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .upload-dropzone:hover, .upload-dropzone.drag-active {
+      border-color: var(--primary-hover);
+      background: var(--primary-soft);
+      transform: translateY(-2px);
+    }
+    .upload-dropzone input { display: none; }
+    .upload-main-text { font-size: 1.1rem; font-weight: 600; color: var(--text-title); margin-bottom: 0.35rem; }
+    .upload-sub-text { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 0.7rem 1.6rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    
+    .btn-outline {
+      background: #ffffff;
+      color: var(--text-title);
+      border: 1px solid var(--border-medium);
+      padding: 0.65rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-outline:hover { background: #f1f5f9; border-color: var(--text-muted); }
+
+    .btn-danger {
+      background: var(--accent-rose-bg);
+      color: var(--accent-rose);
+      border: 1px solid #fca5a5;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-danger:hover { background: #ffe4e6; border-color: var(--accent-rose); }
+
+    .divider-line {
+      display: flex; align-items: center; justify-content: center;
+      margin: 1.5rem 0; color: var(--text-subtle); font-size: 0.85rem; font-weight: 500;
+    }
+    .divider-line::before, .divider-line::after {
+      content: ""; flex: 1; height: 1px; background: var(--border-light); margin: 0 1rem;
+    }
+
+    /* TOP BAR & APP HEADER */
+    .app-header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-light);
+      padding: 0.9rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .brand-logo {
+      font-weight: 700; font-size: 1.15rem; color: var(--text-title);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-badge {
+      font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.55rem;
+      background: var(--primary-soft); color: var(--primary); border-radius: 0.4rem;
+    }
+
+    /* NAVIGATION TABS BAR */
+    .nav-tabs-bar {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-light);
+      padding: 0 2rem;
+      display: flex; gap: 1.5rem; overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 1rem 0.5rem;
+      border: none; background: transparent;
+      font-size: 0.95rem; font-weight: 600; color: var(--text-muted);
+      cursor: pointer; position: relative; transition: color 0.2s;
+      white-space: nowrap; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .tab-btn:hover { color: var(--text-title); }
+    .tab-btn.active { color: var(--primary); font-weight: 700; }
+    .tab-btn.active::after {
+      content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+      background: var(--primary); border-radius: 3px 3px 0 0;
+    }
+
+    /* MAIN BODY & LAYOUT */
+    .app-body {
+      padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%; flex: 1;
+    }
+
+    /* AI COPILOT SUMMARY CARD */
+    .copilot-card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-left: 5px solid var(--primary);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .copilot-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.85rem;
+    }
+    .copilot-title-box { display: flex; align-items: center; gap: 0.75rem; }
+    .copilot-tag {
+      background: var(--primary); color: #ffffff; font-size: 0.75rem; font-weight: 700;
+      padding: 0.25rem 0.65rem; border-radius: 0.4rem; letter-spacing: 0.03em;
+    }
+    .copilot-heading { font-size: 1.15rem; font-weight: 700; color: var(--text-title); }
+
+    .narrative-stream { display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.95rem; line-height: 1.65; color: var(--text-body); }
+    .narrative-box { background: #f8fafc; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 0.9rem 1.15rem; }
+    .narrative-title { font-weight: 700; color: var(--text-title); margin-bottom: 0.35rem; font-size: 0.9rem; }
+
+    /* TOOLBARS & CONTROLS */
+    .control-panel {
+      background: var(--card-bg); border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 1rem;
+    }
+    .panel-title { font-size: 1.05rem; font-weight: 700; color: var(--text-title); }
+
+    .kpi-search-input {
+      width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md);
+      border: 1px solid var(--border-medium); font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+    }
+    .kpi-search-input:focus { border-color: var(--primary); }
+
+    .chip-container { display: flex; flex-wrap: wrap; gap: 0.5rem; max-height: 140px; overflow-y: auto; padding: 0.1rem; }
+    .chip-item {
+      padding: 0.4rem 0.9rem; border-radius: 2rem; font-size: 0.83rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border-light); background: #f8fafc; color: var(--text-muted);
+      transition: all 0.15s; user-select: none;
+    }
+    .chip-item.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 700; }
+
+    /* KPI CARDS GRID */
+    .kpi-cards-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;
+    }
+    .kpi-card {
+      background: var(--card-bg); border: 1px solid var(--border-light); border-radius: var(--radius-lg);
+      padding: 1.35rem; box-shadow: var(--shadow-sm); transition: all 0.2s ease;
+      display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--primary);
+    }
+    .kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+    .card-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .card-cat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 0.35rem; background: #f1f5f9; color: var(--text-muted); }
+    .card-status-badge { font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 0.35rem; }
+    .status-ok { background: var(--accent-green-bg); color: var(--accent-green); }
+    .status-alert { background: var(--accent-rose-bg); color: var(--accent-rose); }
+
+    .card-metric-title { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .card-metric-value { font-size: 1.85rem; font-weight: 700; color: var(--text-title); line-height: 1.2; letter-spacing: -0.01em; }
+
+    /* MULTI PIVOT CONFIG CARDS & GRID */
+    .pivot-config-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 1.15rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .pivot-config-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;
+    }
+    .pivot-config-title {
+      font-size: 0.92rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .pivot-control-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: center;
+    }
+    .select-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .select-group label { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); }
+    .select-control {
+      padding: 0.6rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-medium);
+      font-weight: 600; font-size: 0.88rem; outline: none; background: #ffffff;
+    }
+
+    /* PIVOT DASHBOARD GRID */
+    .pivot-dashboard-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .pivot-charts-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;
+    }
+    @media (max-width: 600px) {
+      .pivot-charts-grid { grid-template-columns: 1fr; }
+    }
+
+    .pivot-chart-item-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 1.35rem;
+      box-shadow: var(--shadow-sm);
+      height: 380px;
+      display: flex; flex-direction: column;
+    }
+    .pivot-chart-title-bar {
+      font-size: 0.95rem; font-weight: 700; color: var(--text-title); margin-bottom: 0.85rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* TARGET & GAP TRACKER TABLE */
+    .target-table-card {
+      background: var(--card-bg); border: 1px solid var(--border-light); border-radius: var(--radius-lg);
+      overflow-x: auto; box-shadow: var(--shadow-sm); margin-bottom: 1.5rem;
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    th, td { padding: 0.9rem 1.15rem; border-bottom: 1px solid var(--border-light); }
+    th { background: #f8fafc; color: var(--text-title); font-weight: 700; }
+
+    .input-target-val {
+      width: 140px; padding: 0.45rem 0.75rem; border-radius: var(--radius-md);
+      border: 1px solid var(--border-medium); font-weight: 600; font-size: 0.9rem; outline: none;
+    }
+    .input-target-val:focus { border-color: var(--primary); }
+
+    /* TAB VIEWS */
+    .tab-content-view { display: none; }
+    .tab-content-view.active { display: block; animation: fadeIn 0.2s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* MODAL BRIEFING */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
+    }
+    .modal-card {
+      background: #ffffff; border-radius: var(--radius-xl); max-width: 780px; width: 100%; max-height: 85vh;
+      overflow-y: auto; padding: 2.25rem; box-shadow: var(--shadow-lg); position: relative;
+    }
+    .modal-head {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.85rem;
+    }
+    .close-modal { background: #f1f5f9; border: none; font-size: 1.1rem; cursor: pointer; border-radius: 50%; width: 34px; height: 34px; color: var(--text-muted); }
+
+    @media (max-width: 800px) {
+      .app-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+      .nav-tabs-bar { padding: 0 1rem; }
+      .app-body { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= LANDING PAGE ================= -->
+  <div id="landingPage" class="hero-container">
+    <div class="hero-card">
+      <span class="hero-tag">Enterprise Analytics Copilot</span>
+      <h1 class="hero-title">AI Data Doctor & KPI Engine</h1>
+      <p class="hero-desc">ระบบวิเคราะห์ข้อมูลองค์กรอัจฉริยะ นำเข้าไฟล์ Excel ได้ทุกรูปแบบ สแกน KPI สรุปผล วิเคราะห์ Pivot Chart และติดตามเป้าหมายให้อัตโนมัติด้วยภาษาพูดเข้าใจง่าย</p>
+
+      <div class="upload-dropzone" id="dropzoneLanding" onclick="document.getElementById('fileInputLanding').click()">
+        <div class="upload-main-text">คลิกหรือลากไฟล์ Excel / CSV มาวางที่นี่</div>
+        <div class="upload-sub-text">รองรับไฟล์ตารางข้อมูล .xlsx, .xls, .csv ทุกรูปแบบ</div>
+        <button class="btn-primary" type="button">เลือกไฟล์จากคอมพิวเตอร์</button>
+        <input type="file" id="fileInputLanding" accept=".xlsx, .xls, .csv" onchange="handleFileUpload(event)">
+      </div>
+
+      <div class="divider-line">หรือ</div>
+
+      <button class="btn-outline" style="width: 100%;" onclick="loadDemoDataset()">ลองใช้ไฟล์ข้อมูลตัวอย่าง (Demo Dataset)</button>
+    </div>
+  </div>
+
+  <!-- ================= MAIN WORKSPACE DASHBOARD ================= -->
+  <div id="dashboardPage" style="display: none; flex-direction: column; min-height: 100vh;">
+    
+    <!-- Top Header Bar -->
+    <header class="app-header">
+      <div class="brand-logo">
+        Enterprise AI Engine <span class="brand-badge">KPI Copilot Live</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);" id="headerFileMeta">ไฟล์: -</span>
+        <button class="btn-primary" onclick="openAISummaryModal()" style="font-size: 0.88rem; padding: 0.5rem 1.15rem;">สรุปรายงานภาพรวม (AI Briefing)</button>
+        <button class="btn-outline" onclick="resetToLanding()" style="font-size: 0.88rem; padding: 0.5rem 0.9rem;">เปลี่ยนไฟล์</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs Bar -->
+    <nav class="nav-tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('tabKPIOverview', this)">
+        📊 สรุปตัวชี้วัด KPI
+      </button>
+      <button class="tab-btn" onclick="switchTab('tabPivotCharts', this)">
+        📈 วิเคราะห์คอลัมน์ & Pivot Charts
+      </button>
+      <button class="tab-btn" onclick="switchTab('tabTargetGap', this)">
+        🎯 ตั้งเป้าหมาย & ติดตามผล
+      </button>
+      <button class="tab-btn" onclick="switchTab('tabRawData', this)">
+        📋 ตารางข้อมูลดิบ
+      </button>
+    </nav>
+
+    <!-- Main Workspace Content Body -->
+    <main class="app-body">
+
+      <!-- ================= TAB 1: KPI OVERVIEW ================= -->
+      <div id="tabKPIOverview" class="tab-content-view active">
+        
+        <!-- Embedded AI Copilot Card -->
+        <section class="copilot-card">
+          <div class="copilot-header">
+            <div class="copilot-title-box">
+              <span class="copilot-tag">AI Copilot</span>
+              <span class="copilot-heading">วิเคราะห์และประมวลผลข้อมูลอัตโนมัติ</span>
+            </div>
+            <button class="btn-outline" onclick="runEmbeddedAICopilot()" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">ประมวลผลใหม่</button>
+          </div>
+
+          <div class="narrative-stream">
+            <div class="narrative-box">
+              <div class="narrative-title">สรุปภาพรวมไฟล์ข้อมูลแบบเข้าใจง่าย</div>
+              <div id="aiConversationalSummary">กำลังประมวลผลไฟล์ข้อมูลและวิเคราะห์ภาพรวมให้อยู่ครับ...</div>
+            </div>
+            <div class="narrative-box">
+              <div class="narrative-title">ผลประเมินรายได้ กำไร-ขาดทุน และจุดสังเกต</div>
+              <div id="aiConversationalRisks">กำลังประมวลผลตัวเลขการเงินและจุดสังเกตให้อยู่ครับ...</div>
+            </div>
+            <div class="narrative-box" id="aiTargetEvaluationBox" style="display: none;">
+              <div class="narrative-title">🎯 สรุปผลการดำเนินงานเปรียบเทียบกับเป้าหมาย (Target Analysis)</div>
+              <div id="aiConversationalTargets">ยังไม่ได้ตั้งเป้าหมาย สามารถไปตั้งเป้าหมายได้ที่แถบ "ตั้งเป้าหมาย & ติดตามผล" ครับ</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- KPI Customizer Toolbar -->
+        <div class="control-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <span class="panel-title">เลือกตัวชี้วัด KPI ที่ต้องการให้แสดงผลในไฟล์นี้:</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn-outline" onclick="selectAllKPIs(true)" style="font-size: 0.78rem; padding: 0.3rem 0.75rem;">เลือกทั้งหมด</button>
+              <button class="btn-outline" onclick="selectAllKPIs(false)" style="font-size: 0.78rem; padding: 0.3rem 0.75rem;">ล้างทั้งหมด</button>
+            </div>
+          </div>
+
+          <input type="text" class="kpi-search-input" id="kpiSearchInput" placeholder="พิมพ์ค้นหาชื่อ KPI หรือคอลัมน์ที่สนใจ..." oninput="filterKPIChips()">
+          <div class="chip-container" id="kpiChipContainer"></div>
+        </div>
+
+        <!-- KPI Metric Cards Grid -->
+        <div style="font-weight: 700; font-size: 1.05rem; color: var(--text-title); margin-bottom: 0.85rem;">การ์ดตัวชี้วัด KPI หลัก (Selected Key Metrics):</div>
+        <div class="kpi-cards-grid" id="kpiCardsContainer"></div>
+      </div>
+
+      <!-- ================= TAB 2: PIVOT CHARTS ================= -->
+      <div id="tabPivotCharts" class="tab-content-view">
+        <div class="control-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <div class="panel-title">กำหนดรูปแบบ Pivot Chart สำหรับวิเคราะห์แต่ละคอลัมน์</div>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                คุณสามารถกดปุ่มเครื่องหมายบวกเพื่อเพิ่มการตั้งค่า Pivot Chart ได้หลายรูปแบบพร้อมกันครับ
+              </p>
+            </div>
+            <button class="btn-primary" onclick="addPivotConfig()" style="font-size: 0.88rem; padding: 0.5rem 1.15rem;">
+              ➕ เพิ่มรูปแบบ Pivot Chart
+            </button>
+          </div>
+
+          <!-- Dynamic List of Config Cards -->
+          <div id="pivotConfigsContainer"></div>
+        </div>
+
+        <!-- Dashboard Header & Download Image Button -->
+        <div class="pivot-dashboard-header">
+          <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-title); display: flex; align-items: center; gap: 0.5rem;">
+            📊 กราฟ Pivot Charts ทั้งหมดที่คุณกำหนดไว้ (Custom Chart Overview)
+          </div>
+          <button class="btn-outline" onclick="downloadAllPivotChartsImage()" style="font-size: 0.88rem; display: flex; align-items: center; gap: 0.5rem;">
+            📷 บันทึกรูปภาพกราฟทั้งหมด (Export PNG)
+          </button>
+        </div>
+
+        <!-- Dynamic Main Chart Dashboard Grid -->
+        <div id="pivotChartsDashboardGrid" class="pivot-charts-grid" style="background: #ffffff; padding: 1.25rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light);"></div>
+      </div>
+
+      <!-- ================= TAB 3: TARGET & GAP TRACKER ================= -->
+      <div id="tabTargetGap" class="tab-content-view">
+        <div class="control-panel">
+          <div class="panel-title">กำหนดเป้าหมายองค์กร (KPI Target Setting & Gap Tracker)</div>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">
+            กรอกตัวเลขเป้าหมายที่คุณต้องการลงในช่อง "ค่าเป้าหมาย" ระบบจะคำนวณและประเมินผลต่าง (Gap) พร้อมคำแนะนำเชิงกลยุทธ์ให้อัตโนมัติเรียลไทม์ครับ
+          </p>
+        </div>
+
+        <div class="target-table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>ตัวชี้วัด KPI</th>
+                <th>ค่าปัจจุบันในไฟล์ (Actual)</th>
+                <th>ค่าเป้าหมายที่ตั้งไว้ (Target)</th>
+                <th>สถานะการบรรลุเป้า</th>
+                <th>ส่วนต่างที่ขาด/เกิน (Gap)</th>
+                <th>คำแนะนำแอ็กชัน</th>
+              </tr>
+            </thead>
+            <tbody id="targetTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================= TAB 4: RAW DATA TABLE ================= -->
+      <div id="tabRawData" class="tab-content-view">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <input type="text" class="kpi-search-input" id="rawTableSearch" placeholder="พิมพ์ค้นหาข้อมูลในตาราง..." style="max-width: 380px;" oninput="renderRawTable()">
+          <button class="btn-outline" onclick="exportCleanedExcel()">ดาวน์โหลดไฟล์ Excel (.xlsx)</button>
+        </div>
+
+        <div class="target-table-card" style="max-height: 520px; overflow-y: auto;">
+          <table id="rawDataTable"></table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- AI Executive Briefing Modal -->
+  <div class="modal-overlay" id="aiSummaryModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--primary);">สรุปรายงานภาพรวมสำหรับผู้บริหาร (Executive Briefing)</h3>
+        <button class="close-modal" onclick="closeAISummaryModal()">✕</button>
+      </div>
+
+      <div id="modalReportContent" style="font-size: 0.95rem; line-height: 1.75; color: var(--text-body);"></div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1rem;">
+        <button class="btn-outline" onclick="copyReportText()">คัดลอกรายงาน</button>
+        <button class="btn-primary" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Custom Chart.js Plugin for displaying percentage labels inside Pie & Doughnut charts
+    const piePercentagePlugin = {
+      id: 'piePercentageLabel',
+      afterDraw(chart) {
+        if (chart.config.type !== 'pie' && chart.config.type !== 'doughnut') return;
+        const { ctx } = chart;
+        const dataset = chart.data.datasets[0];
+        if (!dataset || !dataset.data) return;
+
+        const total = dataset.data.reduce((a, b) => a + (parseFloat(b) || 0), 0);
+        if (total === 0) return;
+
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data) return;
+
+        meta.data.forEach((element, index) => {
+          const val = parseFloat(dataset.data[index]) || 0;
+          if (val <= 0) return;
+
+          const percentage = ((val / total) * 100).toFixed(1) + '%';
+          const { x, y } = element.tooltipPosition();
+
+          ctx.save();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 12px Prompt, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+          ctx.shadowBlur = 4;
+          ctx.fillText(percentage, x, y);
+          ctx.restore();
+        });
+      }
+    };
+
+    // Register Plugin globally for Chart.js
+    if (typeof Chart !== 'undefined') {
+      Chart.register(piePercentagePlugin);
+    }
+
+    // Global State Management
+    let workbookObj = null;
+    let rawDataset = [];
+    let columns = [];
+    let detectedKPIs = {};
+    let selectedKPIKeys = new Set();
+    let kpiTargets = {};
+    
+    // Multi Pivot Configurations
+    let pivotConfigs = [];
+    let nextPivotConfigId = 1;
+    let pivotChartInstancesMap = {};
+
+    let currentFileName = "";
+    let currentFileSize = "";
+
+    const isDateOrTimeOrIDColumn = (colName) => {
+      if (!colName) return false;
+      const lower = colName.toLowerCase();
+      const keywords = ["วัน", "เวลา", "date", "time", "year", "month", "day", "timestamp", "ปี", "เดือน", " id", "id", "code", "รหัส", "เบอร์", "phone", "ลำดับ", "no.", "index"];
+      return keywords.some(kw => lower.includes(kw));
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const dropzone = document.getElementById('dropzoneLanding');
+      if (dropzone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
+          dropzone.addEventListener(eName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+        ['dragenter', 'dragover'].forEach(name => dropzone.addEventListener(name, () => dropzone.classList.add('drag-active'), false));
+        ['dragleave', 'drop'].forEach(name => dropzone.addEventListener(name, () => dropzone.classList.remove('drag-active'), false));
+        dropzone.addEventListener('drop', (e) => {
+          const files = e.dataTransfer.files;
+          if (files && files.length > 0) processFileObject(files[0]);
+        }, false);
+      }
+    });
+
+    function id(elemId) { return document.getElementById(elemId); }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      id(tabId).classList.add('active');
+      btn.classList.add('active');
+
+      if (tabId === 'tabPivotCharts') {
+        renderPivotConfigCards();
+        renderAllPivotCharts();
+      }
+    }
+
+    function resetToLanding() {
+      id('dashboardPage').style.display = 'none';
+      id('landingPage').style.display = 'flex';
+    }
+
+    function handleFileUpload(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+      processFileObject(files[0]);
+      event.target.value = '';
+    }
+
+    function processFileObject(file) {
+      if (!file) return;
+
+      currentFileName = file.name || "Uploaded_File.xlsx";
+      currentFileSize = file.size ? (file.size / 1024).toFixed(1) + " KB" : "N/A";
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          workbookObj = XLSX.read(data, { type: 'array', cellDates: true });
+
+          if (!workbookObj.SheetNames || workbookObj.SheetNames.length === 0) {
+            alert("ไฟล์นี้ไม่มี Sheet ข้อมูลอยู่เลยครับ");
+            return;
+          }
+
+          const firstSheet = workbookObj.SheetNames[0];
+          loadSheetData(firstSheet);
+        } catch (err) {
+          alert("ไม่สามารถอ่านไฟล์ได้ครับ: " + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function loadSheetData(sheetName) {
+      const worksheet = workbookObj.Sheets[sheetName];
+      if (!worksheet) return;
+
+      rawDataset = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+      if (!rawDataset || rawDataset.length === 0) {
+        alert("ชีทนี้ไม่มีแถวข้อมูลอยู่เลยครับ");
+        return;
+      }
+
+      let colSet = new Set();
+      rawDataset.forEach(row => Object.keys(row).forEach(k => colSet.add(k)));
+      columns = Array.from(colSet);
+
+      id('headerFileMeta').innerText = `ไฟล์: ${currentFileName} (${rawDataset.length.toLocaleString()} แถว)`;
+
+      id('landingPage').style.display = 'none';
+      id('dashboardPage').style.display = 'flex';
+
+      initDefaultPivotConfigs();
+      processKPIs();
+      runEmbeddedAICopilot();
+      renderTargetTable();
+      renderRawTable();
+    }
+
+    function loadDemoDataset() {
+      currentFileName = "Demo_Enterprise_Financial_Dataset.xlsx";
+      currentFileSize = "18.5 KB";
+
+      rawDataset = [
+        { "แผนก": "การขาย", "ยอดขาย_บาท": 1500000, "ต้นทุน_บาท": 900000, "กำไรสุทธิ_บาท": 600000, "จำนวนออเดอร์": 450, "พึงพอใจลูกค้า": 4.8 },
+        { "แผนก": "การตลาด", "ยอดขาย_บาท": 850000, "ต้นทุน_บาท": 600000, "กำไรสุทธิ_บาท": 250000, "จำนวนออเดอร์": 280, "พึงพอใจลูกค้า": 4.2 },
+        { "แผนก": "บริการลูกค้า", "ยอดขาย_บาท": 320000, "ต้นทุน_บาท": 200000, "กำไรสุทธิ_บาท": 120000, "จำนวนออเดอร์": 190, "พึงพอใจลูกค้า": 4.6 },
+        { "แผนก": "จัดซื้อ", "ยอดขาย_บาท": 2100000, "ต้นทุน_บาท": 1400000, "กำไรสุทธิ_บาท": 700000, "จำนวนออเดอร์": 610, "พึงพอใจลูกค้า": 4.1 },
+        { "แผนก": "คลังสินค้า", "ยอดขาย_บาท": 450000, "ต้นทุน_บาท": 350000, "กำไรสุทธิ_บาท": 100000, "จำนวนออเดอร์": 150, "พึงพอใจลูกค้า": 3.8 },
+        { "แผนก": "วิจัยพัฒนา", "ยอดขาย_บาท": 1200000, "ต้นทุน_บาท": 800000, "กำไรสุทธิ_บาท": 400000, "จำนวนออเดอร์": 95, "พึงพอใจลูกค้า": 4.7 }
+      ];
+
+      let colSet = new Set();
+      rawDataset.forEach(row => Object.keys(row).forEach(k => colSet.add(k)));
+      columns = Array.from(colSet);
+
+      id('headerFileMeta').innerText = `ไฟล์: ${currentFileName} (${rawDataset.length.toLocaleString()} แถว)`;
+
+      id('landingPage').style.display = 'none';
+      id('dashboardPage').style.display = 'flex';
+
+      initDefaultPivotConfigs();
+      processKPIs();
+      runEmbeddedAICopilot();
+      renderTargetTable();
+      renderRawTable();
+    }
+
+    function findCategoryColumn() {
+      const priorityKeywords = ["แผนก", "หมวดหมู่", "สินค้า", "สาขา", "เดือน", "ชื่อ", "รายการ", "ประเภท", "กลุ่ม", "department", "category", "name", "month"];
+      for (let kw of priorityKeywords) {
+        const found = columns.find(c => c.toLowerCase().includes(kw) && !isDateOrTimeOrIDColumn(c));
+        if (found) return found;
+      }
+      return columns[0] || null;
+    }
+
+    function findNumericColumns() {
+      return columns.filter(col => {
+        if (isDateOrTimeOrIDColumn(col)) return false;
+        const nums = rawDataset.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
+        return nums.length >= rawDataset.length * 0.5;
+      });
+    }
+
+    function initDefaultPivotConfigs() {
+      pivotConfigs = [];
+      nextPivotConfigId = 1;
+
+      const xDefault = findCategoryColumn();
+      const numCols = findNumericColumns();
+      const yDefault = numCols.length > 0 ? numCols[0] : (columns[0] || '');
+
+      pivotConfigs.push({
+        id: nextPivotConfigId++,
+        xCol: xDefault || (columns[0] || ''),
+        yCol: yDefault,
+        agg: 'sum',
+        chartType: 'pie'
+      });
+    }
+
+    function addPivotConfig() {
+      const xDefault = findCategoryColumn();
+      const numCols = findNumericColumns();
+
+      const usedYCols = new Set(pivotConfigs.map(c => c.yCol));
+      const nextY = numCols.find(c => !usedYCols.has(c)) || numCols[0] || columns[0] || '';
+
+      pivotConfigs.push({
+        id: nextPivotConfigId++,
+        xCol: xDefault || columns[0] || '',
+        yCol: nextY,
+        agg: 'sum',
+        chartType: pivotConfigs.length % 2 === 0 ? 'bar' : 'pie'
+      });
+
+      renderPivotConfigCards();
+      renderAllPivotCharts();
+    }
+
+    function removePivotConfig(configId) {
+      pivotConfigs = pivotConfigs.filter(c => c.id !== configId);
+      renderPivotConfigCards();
+      renderAllPivotCharts();
+    }
+
+    function updatePivotConfig(configId, field, value) {
+      const cfg = pivotConfigs.find(c => c.id === configId);
+      if (cfg) {
+        cfg[field] = value;
+        renderAllPivotCharts();
+      }
+    }
+
+    function renderPivotConfigCards() {
+      const container = id('pivotConfigsContainer');
+      container.innerHTML = '';
+
+      pivotConfigs.forEach((cfg, idx) => {
+        const card = document.createElement('div');
+        card.className = 'pivot-config-card';
+
+        let xOptionsHtml = '';
+        columns.forEach(col => {
+          xOptionsHtml += `<option value="${col}" ${col === cfg.xCol ? 'selected' : ''}>${col}</option>`;
+        });
+
+        let yOptionsHtml = '';
+        columns.forEach(col => {
+          if (!isDateOrTimeOrIDColumn(col)) {
+            yOptionsHtml += `<option value="${col}" ${col === cfg.yCol ? 'selected' : ''}>${col}</option>`;
+          }
+        });
+
+        const deleteBtnHtml = pivotConfigs.length > 1
+          ? `<button class="btn-danger" onclick="removePivotConfig(${cfg.id})">🗑️ ลบรูปแบบนี้</button>`
+          : '';
+
+        card.innerHTML = `
+          <div class="pivot-config-header">
+            <div class="pivot-config-title">
+              📌 การกำหนดรูปแบบ Pivot Chart #${idx + 1}
+            </div>
+            ${deleteBtnHtml}
+          </div>
+          <div class="pivot-control-grid">
+            <div class="select-group">
+              <label>เลือกคอลัมน์แกน X (Group By):</label>
+              <select class="select-control" onchange="updatePivotConfig(${cfg.id}, 'xCol', this.value)">
+                ${xOptionsHtml}
+              </select>
+            </div>
+            <div class="select-group">
+              <label>เลือกคอลัมน์แกน Y (Values Metric):</label>
+              <select class="select-control" onchange="updatePivotConfig(${cfg.id}, 'yCol', this.value)">
+                ${yOptionsHtml}
+              </select>
+            </div>
+            <div class="select-group">
+              <label>วิธีรวมข้อมูล (Aggregation):</label>
+              <select class="select-control" onchange="updatePivotConfig(${cfg.id}, 'agg', this.value)">
+                <option value="sum" ${cfg.agg === 'sum' ? 'selected' : ''}>ผลรวม (Sum)</option>
+                <option value="avg" ${cfg.agg === 'avg' ? 'selected' : ''}>ค่าเฉลี่ย (Average)</option>
+                <option value="count" ${cfg.agg === 'count' ? 'selected' : ''}>จำนวนรายการ (Count)</option>
+              </select>
+            </div>
+            <div class="select-group">
+              <label>รูปแบบ Pivot Chart:</label>
+              <select class="select-control" onchange="updatePivotConfig(${cfg.id}, 'chartType', this.value)">
+                <option value="pie" ${cfg.chartType === 'pie' ? 'selected' : ''}>กราฟวงกลม (Pie Chart - แสดง %)</option>
+                <option value="doughnut" ${cfg.chartType === 'doughnut' ? 'selected' : ''}>กราฟโดนัท (Doughnut - แสดง %)</option>
+                <option value="bar" ${cfg.chartType === 'bar' ? 'selected' : ''}>กราฟแท่ง (Bar Chart)</option>
+                <option value="line" ${cfg.chartType === 'line' ? 'selected' : ''}>กราฟเส้น (Line Chart)</option>
+                <option value="radar" ${cfg.chartType === 'radar' ? 'selected' : ''}>กราฟเรดาร์ (Radar Chart)</option>
+              </select>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderAllPivotCharts() {
+      const grid = id('pivotChartsDashboardGrid');
+      
+      Object.keys(pivotChartInstancesMap).forEach(key => {
+        if (pivotChartInstancesMap[key]) {
+          pivotChartInstancesMap[key].destroy();
+        }
+      });
+      pivotChartInstancesMap = {};
+
+      grid.innerHTML = '';
+
+      if (pivotConfigs.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 3rem;">โปรดกดปุ่ม "+ เพิ่มรูปแบบ Pivot Chart" เพื่อเริ่มต้นแสดงกราฟวิเคราะห์ครับ</div>`;
+        return;
+      }
+
+      pivotConfigs.forEach((cfg, idx) => {
+        if (!cfg.xCol || !cfg.yCol) return;
+
+        const groupedData = {};
+        rawDataset.forEach(row => {
+          const key = row[cfg.xCol] !== undefined && row[cfg.xCol] !== "" ? String(row[cfg.xCol]) : "ไม่ระบุ";
+          const val = parseFloat(row[cfg.yCol]);
+          if (!groupedData[key]) groupedData[key] = [];
+          if (!isNaN(val)) groupedData[key].push(val);
+        });
+
+        const labels = Object.keys(groupedData);
+        const values = labels.map(label => {
+          const arr = groupedData[label];
+          if (arr.length === 0) return 0;
+          if (cfg.agg === 'sum') return arr.reduce((a,b) => a+b, 0);
+          if (cfg.agg === 'avg') return arr.reduce((a,b) => a+b, 0) / arr.length;
+          if (cfg.agg === 'count') return arr.length;
+          return 0;
+        });
+
+        const cardItem = document.createElement('div');
+        cardItem.className = 'pivot-chart-item-card';
+
+        const canvasId = `pivotChartCanvas_${cfg.id}`;
+        cardItem.innerHTML = `
+          <div class="pivot-chart-title-bar">
+            <span>Chart #${idx + 1}: ${cfg.yCol} (${cfg.agg.toUpperCase()}) ตาม ${cfg.xCol}</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">${cfg.chartType.toUpperCase()}</span>
+          </div>
+          <div style="flex: 1; position: relative;">
+            <canvas id="${canvasId}"></canvas>
+          </div>
+        `;
+        grid.appendChild(cardItem);
+
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const bgColors = ['#4f46e5', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#3b82f6', '#14b8a6', '#6366f1'];
+
+        const inst = new Chart(ctx, {
+          type: cfg.chartType,
+          data: {
+            labels: labels,
+            datasets: [{
+              label: `${cfg.yCol} (${cfg.agg.toUpperCase()})`,
+              data: values,
+              backgroundColor: cfg.chartType === 'line' ? 'rgba(79, 70, 229, 0.15)' : bgColors,
+              borderColor: '#4f46e5',
+              borderWidth: 2,
+              fill: cfg.chartType === 'line'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top' },
+              title: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.raw || 0;
+                    if (cfg.chartType === 'pie' || cfg.chartType === 'doughnut') {
+                      const total = context.chart.data.datasets[0].data.reduce((a, b) => a + (parseFloat(b) || 0), 0);
+                      const pct = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                      return `${label}: ${value.toLocaleString()} (${pct})`;
+                    }
+                    return `${label}: ${value.toLocaleString()}`;
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        pivotChartInstancesMap[cfg.id] = inst;
+      });
+    }
+
+    function downloadAllPivotChartsImage() {
+      const targetElement = id('pivotChartsDashboardGrid');
+      if (!targetElement || pivotConfigs.length === 0) {
+        alert("ไม่พบกราฟ Pivot Charts สำหรับบันทึกรูปภาพครับ");
+        return;
+      }
+
+      if (typeof html2canvas === 'undefined') {
+        alert("ระบบบันทึกรูปภาพต้องใช้การเชื่อมต่ออินเทอร์เน็ตดึงไลบรารี html2canvas ครับ");
+        return;
+      }
+
+      html2canvas(targetElement, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Pivot_Charts_Overview_${currentFileName.replace(/\.[^/.]+$/, "")}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(err => {
+        alert("ไม่สามารถบันทึกรูปภาพได้ครับ: " + err.message);
+      });
+    }
+
+    function processKPIs() {
+      detectedKPIs = {};
+      selectedKPIKeys.clear();
+
+      const totalRows = rawDataset.length;
+      detectedKPIs['จำนวนรายการทั้งหมด'] = { 
+        rawNum: totalRows,
+        value: `${totalRows.toLocaleString()} รายการ`, 
+        category: 'ภาพรวม', 
+        col: null, 
+        isEssential: true 
+      };
+
+      columns.forEach(col => {
+        if (isDateOrTimeOrIDColumn(col)) return;
+
+        const values = rawDataset.map(row => row[col]).filter(val => val !== "" && val !== null && val !== undefined);
+        const numericValues = values.map(val => parseFloat(val)).filter(val => !isNaN(val));
+
+        if (numericValues.length > 0 && numericValues.length >= values.length * 0.7) {
+          const sum = numericValues.reduce((a, b) => a + b, 0);
+          const avg = sum / numericValues.length;
+
+          const lowerCol = col.toLowerCase();
+          const isCoreMetric = lowerCol.includes('ยอด') || lowerCol.includes('ขาย') || lowerCol.includes('กำไร') || lowerCol.includes('ต้นทุน') || lowerCol.includes('revenue') || lowerCol.includes('sales') || lowerCol.includes('ออเดอร์');
+
+          detectedKPIs[`ยอดรวม: ${col}`] = { 
+            rawNum: sum,
+            value: sum.toLocaleString(undefined, {maximumFractionDigits:2}), 
+            category: 'ยอดรวมหลัก', 
+            col: col, 
+            isEssential: isCoreMetric
+          };
+
+          detectedKPIs[`ค่าเฉลี่ย: ${col}`] = { 
+            rawNum: avg,
+            value: avg.toLocaleString(undefined, {maximumFractionDigits:2}), 
+            category: 'ค่าเฉลี่ย', 
+            col: col, 
+            isEssential: false
+          };
+        } else {
+          const uniqueSet = new Set(values);
+          detectedKPIs[`จำนวนประเภทใน ${col}`] = { 
+            rawNum: uniqueSet.size,
+            value: `${uniqueSet.size.toLocaleString()} หมวด`, 
+            category: 'หมวดหมู่', 
+            col: col, 
+            isEssential: false
+          };
+        }
+      });
+
+      let defaultCount = 0;
+      Object.keys(detectedKPIs).forEach(k => {
+        if (detectedKPIs[k].isEssential && defaultCount < 4) {
+          selectedKPIKeys.add(k);
+          defaultCount++;
+        }
+      });
+
+      if (selectedKPIKeys.size === 0) {
+        Object.keys(detectedKPIs).slice(0, 3).forEach(k => selectedKPIKeys.add(k));
+      }
+
+      renderKPIChips();
+      renderKPICardsMinimal();
+    }
+
+    function renderKPIChips() {
+      const container = id('kpiChipContainer');
+      const searchText = (id('kpiSearchInput').value || "").toLowerCase().trim();
+      container.innerHTML = '';
+
+      Object.keys(detectedKPIs).forEach(key => {
+        if (searchText && !key.toLowerCase().includes(searchText)) return;
+
+        const isChecked = selectedKPIKeys.has(key);
+        const chip = document.createElement('div');
+        chip.className = `chip-item ${isChecked ? 'active' : ''}`;
+        chip.innerText = isChecked ? `✓ ${key}` : `+ ${key}`;
+        chip.onclick = () => {
+          if (selectedKPIKeys.has(key)) selectedKPIKeys.delete(key);
+          else selectedKPIKeys.add(key);
+          renderKPIChips();
+          renderKPICardsMinimal();
+          renderTargetTable();
+        };
+        container.appendChild(chip);
+      });
+    }
+
+    function filterKPIChips() { renderKPIChips(); }
+
+    function selectAllKPIs(status) {
+      if (status) Object.keys(detectedKPIs).forEach(k => selectedKPIKeys.add(k));
+      else selectedKPIKeys.clear();
+      renderKPIChips();
+      renderKPICardsMinimal();
+      renderTargetTable();
+    }
+
+    function renderKPICardsMinimal() {
+      const container = id('kpiCardsContainer');
+      container.innerHTML = '';
+
+      if (selectedKPIKeys.size === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2.5rem; background: #ffffff; border-radius: var(--radius-lg); border: 1px dashed var(--border-medium);">กดติ๊กเลือกตัวชี้วัด KPI จากช่องด้านบนเพื่อแสดงผลการ์ดสรุปตัวเลขได้ตามต้องการครับ</div>`;
+        return;
+      }
+
+      selectedKPIKeys.forEach(key => {
+        const item = detectedKPIs[key];
+        if (!item) return;
+
+        const targetVal = kpiTargets[key] || 0;
+        let statusBadgeText = "ปกติ";
+        let statusClass = "status-ok";
+
+        if (targetVal > 0) {
+          if (item.rawNum >= targetVal) {
+            statusBadgeText = "บรรลุเป้า";
+            statusClass = "status-ok";
+          } else {
+            statusBadgeText = "ต่ำกว่าเป้า";
+            statusClass = "status-alert";
+          }
+        }
+
+        const card = document.createElement('div');
+        card.className = 'kpi-card';
+        card.innerHTML = `
+          <div>
+            <div class="card-top-bar">
+              <span class="card-cat-label">${item.category}</span>
+              <span class="card-status-badge ${statusClass}">${statusBadgeText}</span>
+            </div>
+            <div class="card-metric-title">${key}</div>
+            <div class="card-metric-value">${item.value}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function runEmbeddedAICopilot() {
+      const totalRows = rawDataset.length;
+
+      let totalRevenue = 0;
+      let totalCost = 0;
+      let totalProfit = 0;
+      let hasFinancials = false;
+
+      columns.forEach(col => {
+        const lower = col.toLowerCase();
+        const nums = rawDataset.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
+        const sum = nums.reduce((a, b) => a + b, 0);
+
+        if (lower.includes('ยอดขาย') || lower.includes('รายได้') || lower.includes('revenue') || lower.includes('sales')) {
+          totalRevenue += sum;
+          hasFinancials = true;
+        }
+        if (lower.includes('ต้นทุน') || lower.includes('ค่าใช้จ่าย') || lower.includes('cost') || lower.includes('expense')) {
+          totalCost += sum;
+          hasFinancials = true;
+        }
+        if (lower.includes('กำไร') || lower.includes('profit')) {
+          totalProfit += sum;
+          hasFinancials = true;
+        }
+      });
+
+      if (totalProfit === 0 && totalRevenue > 0 && totalCost > 0) {
+        totalProfit = totalRevenue - totalCost;
+      }
+
+      const catCol = findCategoryColumn();
+      
+      id('aiConversationalSummary').innerHTML = `
+        ไฟล์ <b>"${currentFileName}"</b> มีข้อมูลทั้งหมด <b>${totalRows.toLocaleString()} แถว</b> โดยกระจายตามมิติหลักคือ <b>"${catCol || 'ไม่ระบุ'}"</b> ครับ ตอนนี้เราคัดเลือกตัวชี้วัดเด็ดๆ มาโชว์ให้คุณดู ${selectedKPIKeys.size} ตัว สามารถเลือกปรับหรือดู Pivot Chart เพิ่มได้ที่แถบเมนูด้านบนครับ
+      `;
+
+      let financialNarrative = "";
+      if (hasFinancials) {
+        const profitStatusText = totalProfit >= 0 ? `<b style="color:var(--accent-green);">กำไรสุทธิ +${totalProfit.toLocaleString(undefined, {maximumFractionDigits:2})} บาท</b>` : `<b style="color:var(--accent-rose);">ขาดทุน -${Math.abs(totalProfit).toLocaleString(undefined, {maximumFractionDigits:2})} บาท</b>`;
+        financialNarrative = `ประมวลผลการเงินจากไฟล์: ยอดรวมรายได้ <b>${totalRevenue.toLocaleString()} บาท</b>, ต้นทุนรวม <b>${totalCost.toLocaleString()} บาท</b> สรุปผลคือ ${profitStatusText} ครับ`;
+      } else {
+        financialNarrative = `ประมวลผลตารางข้อมูลเรียบร้อยแล้วครับ ไม่พบข้อผิดพลาดร้ายแรง สามารถนำไปวิเคราะห์ในแถบอื่นๆ ได้เลยครับ`;
+      }
+
+      id('aiConversationalRisks').innerHTML = financialNarrative;
+
+      // Target Analysis in AI Copilot
+      const targetKeys = Object.keys(kpiTargets).filter(k => kpiTargets[k] > 0);
+      const targetBox = id('aiTargetEvaluationBox');
+      const targetContent = id('aiConversationalTargets');
+
+      if (targetKeys.length === 0) {
+        targetBox.style.display = 'block';
+        targetContent.innerHTML = `ยังไม่ได้ตั้งเป้าหมายครับ สามารถเข้าไปกรอกเป้าหมายตัวเลขในแถบ <b>"🎯 ตั้งเป้าหมาย & ติดตามผล"</b> แล้วมากดปุ่มประมวลผลใหม่เพื่อดูสรุปยอดว่าถึงเป้าหรือไม่ ขาดอีกเท่าไหร่ได้ทันทีครับ`;
+      } else {
+        targetBox.style.display = 'block';
+        let metList = [];
+        let missedList = [];
+
+        targetKeys.forEach(k => {
+          const item = detectedKPIs[k];
+          const targetVal = kpiTargets[k];
+          if (!item) return;
+
+          const actual = item.rawNum;
+          const diff = actual - targetVal;
+
+          if (actual >= targetVal) {
+            metList.push(`<b>${k}</b> (เป้า: ${targetVal.toLocaleString()}, ทำได้: ${item.value} - <span style="color:var(--accent-green);">เกินเป้า +${diff.toLocaleString(undefined, {maximumFractionDigits:2})}</span>)`);
+          } else {
+            const shortAmt = Math.abs(diff);
+            missedList.push(`<b>${k}</b> (เป้า: ${targetVal.toLocaleString()}, ทำได้: ${item.value} - <span style="color:var(--accent-rose);">ขาดอีก ${shortAmt.toLocaleString(undefined, {maximumFractionDigits:2})}</span>)`);
+          }
+        });
+
+        let targetNarrative = `มีการตั้งเป้าหมายไว้ทั้งหมด <b>${targetKeys.length} รายการ</b><br>`;
+        if (metList.length > 0) {
+          targetNarrative += `✅ <b>รายการที่บรรลุเป้าหมายแล้ว (${metList.length}):</b><br>• ${metList.join('<br>• ')}<br>`;
+        }
+        if (missedList.length > 0) {
+          targetNarrative += `⚠️ <b>รายการที่ยังไม่ถึงเป้าหมาย (ต้องเร่งเพิ่มอีก ${missedList.length} ตัว):</b><br>• ${missedList.join('<br>• ')}<br>`;
+          targetNarrative += `<br>💡 <b>ข้อเสนอแนะ:</b> แนะนำให้เร่งเพิ่มประสิทธิภาพและยอดของรายการที่ยังขาด โดยเฉพาะตัวชี้วัดที่ขาดอยู่อย่างน่าตกใจครับ`;
+        } else {
+          targetNarrative += `<br>🎉 <b>ยินดีด้วยครับ!</b> ตัวชี้วัดที่คุณตั้งเป้าไว้บรรลุเป้าหมายครบทั้งหมดแล้ว!`;
+        }
+
+        targetContent.innerHTML = targetNarrative;
+      }
+    }
+
+    function renderTargetTable() {
+      const tbody = id('targetTableBody');
+      tbody.innerHTML = '';
+
+      if (selectedKPIKeys.size === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:2rem;">ยังไม่ได้เลือกตัวชี้วัด KPI ครับ โปรดเลือกที่แถบแรกก่อน</td></tr>`;
+        return;
+      }
+
+      selectedKPIKeys.forEach(key => {
+        const item = detectedKPIs[key];
+        if (!item) return;
+
+        const currentTarget = kpiTargets[key] || 0;
+        const actual = item.rawNum;
+        const diff = actual - currentTarget;
+        const isMet = currentTarget > 0 ? actual >= currentTarget : true;
+
+        let statusText = currentTarget > 0 ? (isMet ? 'บรรลุเป้าหมาย' : 'ยังไม่บรรลุเป้า') : 'ยังไม่ได้ตั้งเป้า';
+        let statusBadgeClass = currentTarget > 0 ? (isMet ? 'status-ok' : 'status-alert') : '';
+
+        let gapText = currentTarget > 0 
+          ? (diff >= 0 ? `เกินเป้า +${diff.toLocaleString(undefined, {maximumFractionDigits:2})}` : `ขาดอีก ${Math.abs(diff).toLocaleString(undefined, {maximumFractionDigits:2})}`)
+          : '-';
+
+        let actionAdvice = currentTarget > 0
+          ? (isMet ? 'รักษามาตรฐานการทำงานต่อ' : 'เร่งเพิ่มยอด/ลดต้นทุนส่วนนี้')
+          : 'กรอกเป้าหมายเพื่อวัดผล';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:600;">${key}</td>
+          <td><b>${item.value}</b></td>
+          <td>
+            <input type="number" class="input-target-val" value="${currentTarget || ''}" placeholder="ระบุเป้าหมาย" oninput="updateKPITarget('${key}', this)">
+          </td>
+          <td><span class="card-status-badge ${statusBadgeClass}">${statusText}</span></td>
+          <td style="font-weight:600; color:${diff >= 0 ? 'var(--accent-green)' : 'var(--accent-rose)'};">${gapText}</td>
+          <td style="font-size:0.82rem; color:var(--text-muted);">${actionAdvice}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateKPITarget(key, inputEl) {
+      const val = parseFloat(inputEl.value) || 0;
+      kpiTargets[key] = val;
+      
+      renderKPICardsMinimal();
+      runEmbeddedAICopilot();
+
+      const tr = inputEl.closest('tr');
+      if (!tr) return;
+
+      const item = detectedKPIs[key];
+      if (!item) return;
+
+      const actual = item.rawNum;
+      const diff = actual - val;
+      const isMet = val > 0 ? actual >= val : true;
+
+      let statusText = val > 0 ? (isMet ? 'บรรลุเป้าหมาย' : 'ยังไม่บรรลุเป้า') : 'ยังไม่ได้ตั้งเป้า';
+      let statusBadgeClass = val > 0 ? (isMet ? 'status-ok' : 'status-alert') : '';
+
+      let gapText = val > 0 
+        ? (diff >= 0 ? `เกินเป้า +${diff.toLocaleString(undefined, {maximumFractionDigits:2})}` : `ขาดอีก ${Math.abs(diff).toLocaleString(undefined, {maximumFractionDigits:2})}`)
+        : '-';
+
+      let actionAdvice = val > 0
+        ? (isMet ? 'รักษามาตรฐานการทำงานต่อ' : 'เร่งเพิ่มยอด/ลดต้นทุนส่วนนี้')
+        : 'กรอกเป้าหมายเพื่อวัดผล';
+
+      if (tr.children && tr.children.length >= 6) {
+        tr.children[3].innerHTML = `<span class="card-status-badge ${statusBadgeClass}">${statusText}</span>`;
+        tr.children[4].style.color = diff >= 0 ? 'var(--accent-green)' : 'var(--accent-rose)';
+        tr.children[4].innerText = gapText;
+        tr.children[5].innerText = actionAdvice;
+      }
+    }
+
+    function renderRawTable() {
+      const table = id('rawDataTable');
+      const searchVal = (id('rawTableSearch').value || "").toLowerCase().trim();
+
+      let filtered = rawDataset;
+      if (searchVal) {
+        filtered = rawDataset.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(searchVal)));
+      }
+
+      let html = '<thead><tr>';
+      columns.forEach(col => html += `<th>${col}</th>`);
+      html += '</tr></thead><tbody>';
+
+      filtered.slice(0, 100).forEach(row => {
+        html += '<tr>';
+        columns.forEach(col => html += `<td>${row[col] !== undefined ? row[col] : ""}</td>`);
+        html += '</tr>';
+      });
+
+      html += '</tbody>';
+      table.innerHTML = html;
+    }
+
+    function openAISummaryModal() {
+      if (rawDataset.length === 0) return;
+
+      const catCol = findCategoryColumn();
+
+      let totalRevenue = 0;
+      let totalCost = 0;
+      let totalProfit = 0;
+
+      columns.forEach(col => {
+        const lower = col.toLowerCase();
+        const nums = rawDataset.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
+        const sum = nums.reduce((a, b) => a + b, 0);
+
+        if (lower.includes('ยอดขาย') || lower.includes('รายได้') || lower.includes('revenue') || lower.includes('sales')) totalRevenue += sum;
+        if (lower.includes('ต้นทุน') || lower.includes('ค่าใช้จ่าย') || lower.includes('cost')) totalCost += sum;
+        if (lower.includes('กำไร') || lower.includes('profit')) totalProfit += sum;
+      });
+
+      if (totalProfit === 0 && totalRevenue > 0 && totalCost > 0) totalProfit = totalRevenue - totalCost;
+
+      // Target breakdown for modal
+      const targetKeys = Object.keys(kpiTargets).filter(k => kpiTargets[k] > 0);
+      let targetModalHtml = "";
+
+      if (targetKeys.length === 0) {
+        targetModalHtml = `• <i>ยังไม่มีการตั้งเป้าหมายตัวเลขไว้ (สามารถกำหนดเป้าหมายได้ในแถบ "ตั้งเป้าหมาย & ติดตามผล")</i>`;
+      } else {
+        targetKeys.forEach(k => {
+          const item = detectedKPIs[k];
+          const targetVal = kpiTargets[k];
+          if (!item) return;
+
+          const actual = item.rawNum;
+          const diff = actual - targetVal;
+
+          if (actual >= targetVal) {
+            targetModalHtml += `• <b>${k}:</b> เป้าหมาย ${targetVal.toLocaleString()} | ทำได้จริง ${item.value} (<span style="color:var(--accent-green); font-weight:700;">บรรลุเป้า เกิน +${diff.toLocaleString(undefined, {maximumFractionDigits:2})}</span>)<br>`;
+          } else {
+            const shortAmt = Math.abs(diff);
+            targetModalHtml += `• <b>${k}:</b> เป้าหมาย ${targetVal.toLocaleString()} | ทำได้จริง ${item.value} (<span style="color:var(--accent-rose); font-weight:700;">ขาดอีก ${shortAmt.toLocaleString(undefined, {maximumFractionDigits:2})} -> ควรเร่งเพิ่มส่วนนี้</span>)<br>`;
+          }
+        });
+      }
+
+      const html = `
+        <div style="background: #f8fafc; padding: 1.15rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid var(--border-light);">
+          <b>1. ข้อมูลภาพรวมการนำเข้าไฟล์ (File Overview)</b><br>
+          • <b>ชื่อไฟล์:</b> ${currentFileName} (ทั้งหมด ${rawDataset.length.toLocaleString()} แถว)<br>
+          • <b>มิติหลักในไฟล์:</b> ${catCol || 'ไม่ระบุ'}
+        </div>
+
+        <div style="background: #f8fafc; padding: 1.15rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid var(--border-light);">
+          <b>2. สรุปผลประกอบการทางการเงิน (Financial Summary)</b><br>
+          • <b>ยอดรวมรายได้/ยอดขาย:</b> ${totalRevenue.toLocaleString(undefined, {maximumFractionDigits:2})} บาท<br>
+          • <b>ยอดรวมต้นทุน/ค่าใช้จ่าย:</b> ${totalCost.toLocaleString(undefined, {maximumFractionDigits:2})} บาท<br>
+          • <b>สรุปผลกำไร-ขาดทุนสุทธิ:</b> <b style="color:${totalProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-rose)'};">${totalProfit >= 0 ? 'กำไร +' : 'ขาดทุน -'}${Math.abs(totalProfit).toLocaleString(undefined, {maximumFractionDigits:2})} บาท</b>
+        </div>
+
+        <div style="background: #f8fafc; padding: 1.15rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid var(--border-light);">
+          <b>3. สรุปผลการประเมินเป้าหมาย (Target & Gap Summary)</b><br>
+          ${targetModalHtml}
+        </div>
+
+        <div style="background: #f8fafc; padding: 1.15rem; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+          <b>4. ข้อเสนอแนะสำหรับผู้บริหาร</b><br>
+          • เร่งเพิ่มยอดขาย/ประสิทธิภาพในตัวชี้วัดที่ยังขาด เพื่อดันผลงานให้ทะลุเป้าหมายองค์กร<br>
+          • นำข้อมูล Pivot Chart แยกตาม ${catCol || 'หมวดหมู่'} ไปวางแผนบริหารจัดการทรัพยากรให้คุ้มค่าที่สุด
+        </div>
+      `;
+
+      id('modalReportContent').innerHTML = html;
+      id('aiSummaryModal').style.display = 'flex';
+    }
+
+    function closeAISummaryModal() {
+      id('aiSummaryModal').style.display = 'none';
+    }
+
+    function copyReportText() {
+      const text = id('modalReportContent').innerText;
+      navigator.clipboard.writeText(text).then(() => alert("คัดลอกข้อความรายงานสรุป AI เรียบร้อยแล้วครับ!"));
+    }
+
+    function exportCleanedExcel() {
+      if (typeof XLSX === 'undefined') return;
+      const worksheet = XLSX.utils.json_to_sheet(rawDataset);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Dataset");
+      XLSX.writeFile(workbook, "Exported_Dataset.xlsx");
+    }
+  </script>
+</body>
+</html>
